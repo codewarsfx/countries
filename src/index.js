@@ -1,6 +1,7 @@
 
 
 
+
 const data= (()=>{
 
     return {
@@ -10,11 +11,16 @@ const data= (()=>{
 
             const responseData= await response.json()
 
-            const usableData=  responseData.map(({alpha2Code,flag,name})=>{
+            const usableData=  responseData.map(({alpha2Code,flag,name,capital,population,timezones,currencies,languages})=>{
                 return{
                     alpha2Code,
                     flag,
-                    name
+                    name,
+                    capital,
+                    population,
+                    timezones,
+                    currencies,
+                    languages
                 }
             })
 
@@ -27,7 +33,8 @@ const data= (()=>{
 const ui =(()=>{
     const domElements={
         result: document.querySelector('.results'),
-        input:document.querySelector('.input-element')
+        input:document.querySelector('.input-element'),
+        details:document.querySelector('.details')
     }
 
     const button =(where,page)=>{
@@ -54,15 +61,79 @@ const ui =(()=>{
 
 
     const printUi= (itemObj)=>{
-        const {flag,alpha2Code}=itemObj
+        const {flag,alpha2Code,name}=itemObj
         const resultParent= domElements.result
         const resultComponent= `
-        <div class="results-img">
+        <div class="results-img" id="${name}">
             <img src="${flag}" alt="">
             <p class="para">${alpha2Code}</p> 
         </div>
          `
         resultParent.insertAdjacentHTML('beforeend',resultComponent)
+    }
+
+    const renderDetails =(item)=>{
+        const {flag,name,capital,population,timezones,currencies,languages}= item
+        domElements.details.innerHTML=''
+        const detailsUi=`
+          <div class="top-container-img">
+                <img src="${flag}" alt="">
+            </div>
+            <div class="top-container--desciption">
+                <div class="top-heading">
+                    <h1>${name}</h1>
+                    <h3>${capital}</h3>
+                </div>
+                <div class="top-details">
+                    <div class="top-details-row">
+                        <div class="top-details-col">
+                            <div class="top-details-col-icon">
+                                 <i class="fas fa-users"></i>
+                            </div>
+                            <div class="top-details-des">
+                                <p>Population</p>
+                                <h3>${population}</h3>
+                            </div>
+
+                        </div>
+                        <div class="top-details-col">
+                            <div class="top-details-col-icon">
+                             <i class="fas fa-language"></i>
+                            </div>
+                            <div class="top-details-des">
+                                <p>Language</p>
+                                <h3>${languages[0].name}</h3>
+                            </div>
+
+                        </div>
+
+                    </div>
+                     <div class="top-details-row">
+                        <div class="top-details-col">
+                            <div class="top-details-col-icon">
+                               <i class="far fa-money-bill-alt"></i>
+                            </div>
+                            <div class="top-details-des">
+                                <p>Currency</p>
+                                <h3>${currencies[0].name}</h3>
+                            </div>
+
+                        </div>
+                        <div class="top-details-col">
+                            <div class="top-details-col-icon">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="top-details-des">
+                                <p>Time-zone</p>
+                                <h3>${timezones[0]}</h3>
+                            </div>
+
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        `
+        domElements.details.insertAdjacentHTML('afterbegin',detailsUi)
     }
 
 
@@ -83,10 +154,17 @@ const ui =(()=>{
      
         },
         filterSearch :(value, data)=>{
+          
             const filteredData= data.filter(({name})=>name.toLowerCase().includes(value.toLowerCase()))
             return filteredData
         },
-        readInput
+        readInput,
+
+        renderDetails:(name,data)=>{
+              console.log(name)
+            const objWithName= data.find(({name:countryName})=>name === countryName )
+            renderDetails(objWithName)
+        }
     }
 
 })()
@@ -96,35 +174,38 @@ const ui =(()=>{
 
 
 
-var j
+var state={
+
+}
 
 async function get(){
 
+    state.data= await data.getData()
 
-     j= await data.getData()
-
-    ui.renderUI(j)
-
+    ui.renderUI(state.data)
   
 }
-
 get()
-
-
-
 
 document.querySelector('.results').addEventListener('click',(e)=>{
 
-    const pa= parseInt(e.target.closest('.icon').dataset.go,10)
+    if(e.target.closest('.icon')){
 
-    ui.renderUI(j,5,pa)
+    ui.renderUI(state.data,5,parseInt(e.target.closest('.icon').dataset.go,10))
+    }
 
 
+    if(e.target.closest('.results-img')){
+
+        
+
+        ui.renderDetails(e.target.closest('.results-img').id,state.data)
+    }
 })
 
 document.querySelector('.input-element').addEventListener('keyup',(e)=>{
 
-    ui.renderUI(ui.filterSearch(e.target.value,j))
+    ui.renderUI(ui.filterSearch(e.target.value,state.data))
 })
 
 
