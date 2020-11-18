@@ -20,8 +20,6 @@ const data= (()=>{
                     flag
                 }
             })
-
-            this.data= usableData
         }
 
        
